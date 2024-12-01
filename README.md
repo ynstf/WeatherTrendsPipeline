@@ -1,6 +1,6 @@
 # WeatherTrendsPipeline
 
-A comprehensive data engineering pipeline for collecting, processing, and analyzing weather data.
+A comprehensive data engineering pipeline for collecting, processing, and analyzing weather data using the Ambee Weather API.
 
 ## Project Structure
 
@@ -29,10 +29,10 @@ WeatherTrendsPipeline/
 └── requirements.txt         # Project dependencies
 ```
 
-## Setup and Installation
+## Setup
 
 1. Clone the repository
-2. Create a virtual environment:
+2. Create a virtual environment and activate it:
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -41,38 +41,78 @@ WeatherTrendsPipeline/
    ```bash
    pip install -r requirements.txt
    ```
+4. Copy `.env.template` to `.env` and add your Ambee API key:
+   ```
+   AMBEE_API_KEY=your_api_key_here
+   ```
+5. Copy `config/api_config.template.yaml` to `config/api_config.yaml`
 
-## Components
+## Usage Examples
 
-1. **Data Extraction**
-   - OpenWeatherMap API integration
-   - Data validation and error handling
+### Getting Current Weather Data
 
-2. **Data Storage**
-   - PostgreSQL database for structured data
-   - Data schema management
+```python
+from src.utils.api_client import AmbeeAPIClient
 
-3. **Data Processing**
-   - Data cleaning and transformation
-   - Feature engineering
-   - Statistical analysis
+# Initialize the client
+client = AmbeeAPIClient()
 
-4. **Data Visualization**
-   - Interactive dashboards
-   - Trend analysis reports
+# Get weather for Casablanca
+casablanca_weather = client.get_latest_weather(33.5731, -7.5898)
 
-5. **Pipeline Automation**
-   - Airflow DAGs for scheduling
-   - Monitoring and logging
+# Example response:
+{
+    "message": "success",
+    "data": {
+        "temperature": 77,        # Temperature in Fahrenheit
+        "humidity": 31,           # Humidity percentage
+        "pressure": 1020,         # Pressure in mb
+        "windSpeed": 3.3,         # Wind speed in mph
+        "windBearing": 356,       # Wind direction in degrees
+        "cloudCover": 0.69,       # Cloud cover (0-1)
+        "uvIndex": 1,            # UV index
+        "summary": "Partly cloudy skies. Temperatures will feel warm..."
+    }
+}
 
-## Usage
+# Get weather for other Moroccan cities
+rabat_weather = client.get_latest_weather(34.0209, -6.8416)
+marrakech_weather = client.get_latest_weather(31.6295, -7.9811)
+fez_weather = client.get_latest_weather(34.0181, -5.0078)
+```
 
-Detailed usage instructions will be added as the project develops.
+### Common Locations
+
+| City       | Latitude  | Longitude |
+|------------|-----------|-----------|
+| Casablanca | 33.5731   | -7.5898   |
+| Rabat      | 34.0209   | -6.8416   |
+| Marrakech  | 31.6295   | -7.9811   |
+| Fez        | 34.0181   | -5.0078   |
+
+## Features
+
+- Real-time weather data retrieval
+- Secure API key management using environment variables
+- Error handling and automatic retries
+- Support for multiple Moroccan cities
+- Comprehensive weather information including:
+  - Temperature
+  - Humidity
+  - Wind speed and direction
+  - Cloud cover
+  - UV index
+  - Atmospheric pressure
+  - Weather conditions summary
 
 ## Contributing
 
-Guidelines for contributing to the project will be added soon.
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a new Pull Request
 
 ## License
 
-This project is licensed under the terms of the LICENSE file included in the repository.
+This project is licensed under the MIT License - see the LICENSE file for details.

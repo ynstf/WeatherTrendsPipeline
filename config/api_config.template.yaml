@@ -1,0 +1,41 @@
+# Ambee Weather API Configuration
+
+# API settings
+ambee:
+  base_url: "https://api.ambeedata.com"
+  endpoints:
+    latest_weather: "/weather/latest/by-lat-lng"
+  headers:
+    x-api-key: "${AMBEE_API_KEY}"  # Will be loaded from environment variable
+    Content-type: "application/json"
+
+# API request settings
+request:
+  timeout: 30  # seconds
+  retry_attempts: 3
+  retry_delay: 5    # seconds between retries
+
+# Location settings
+default_locations:
+  - name: "Casablanca"
+    country: "MA"
+    lat: 33.5731
+    lon: -7.5898
+  - name: "Rabat"
+    country: "MA"
+    lat: 34.0209
+    lon: -6.8416
+  - name: "Marrakech"
+    country: "MA"
+    lat: 31.6295
+    lon: -7.9811
+  - name: "Fez"
+    country: "MA"
+    lat: 34.0181
+    lon: -5.0078
+
+# Data collection settings
+collection:
+  frequency: "hourly"    # how often to collect data
+  batch_size: 100       # number of records to process at once
+  max_requests_per_day: 1000
