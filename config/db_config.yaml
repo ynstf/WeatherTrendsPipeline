@@ -1,0 +1,64 @@
+# Database Configuration
+
+# PostgreSQL settings
+postgresql:
+  host: "localhost"
+  port: 5432
+  database: "weather_db"
+  user: "YOUR_USERNAME"
+  password: "YOUR_PASSWORD"
+  
+  # Connection pool settings
+  pool:
+    min_connections: 1
+    max_connections: 10
+    connection_timeout: 30  # seconds
+
+# Data warehouse settings (if needed)
+data_warehouse:
+  type: "snowflake"  # or "redshift", "bigquery", etc.
+  connection_string: "YOUR_CONNECTION_STRING"
+  schema: "weather_schema"
+
+# Tables configuration
+tables:
+  weather_data:
+    name: "weather_measurements"
+    schema:
+      - name: "timestamp"
+        type: "TIMESTAMP"
+      - name: "location_id"
+        type: "INTEGER"
+      - name: "temperature"
+        type: "FLOAT"
+      - name: "humidity"
+        type: "INTEGER"
+      - name: "pressure"
+        type: "FLOAT"
+      - name: "wind_speed"
+        type: "FLOAT"
+      - name: "wind_direction"
+        type: "INTEGER"
+      - name: "description"
+        type: "VARCHAR(100)"
+  
+  locations:
+    name: "locations"
+    schema:
+      - name: "id"
+        type: "INTEGER"
+      - name: "name"
+        type: "VARCHAR(100)"
+      - name: "country"
+        type: "VARCHAR(2)"
+      - name: "latitude"
+        type: "FLOAT"
+      - name: "longitude"
+        type: "FLOAT"
+
+# Backup configuration
+backup:
+  enabled: true
+  frequency: "daily"
+  retention_days: 30
+  path: "/backups"
