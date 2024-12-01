@@ -1,0 +1,29 @@
+{
+    "WeatherData": {
+        "message": "success",
+        "data": {
+            "lat": 33.5731,
+            "lng": -7.5898,
+            "timezone": "Africa/Casablanca",
+            "country_code": "MA",
+            "time": 1733061600,
+            "cloudCover": 0.69,
+            "dewPoint": 44.86,
+            "humidity": 31,
+            "pressure": 1020,
+            "precipIntensity": 0,
+            "surfacePressure": 1011,
+            "temperature": 77,
+            "visibility": 8.17384,
+            "windGust": 9.6,
+            "windSpeed": 3.3,
+            "windBearing": 356,
+            "ozone": 307.49,
+            "uvIndex": 1,
+            "apparentTemperature": 77,
+            "icon": "partly-cloudy",
+            "summary": "Partly cloudy skies. Temperatures will feel warm. Dry conditions. Expect a gentle breeze. Low UV levels.",
+            "updatedAt": "2024-12-01T14:00:00.000Z"
+        }
+    }
+}
