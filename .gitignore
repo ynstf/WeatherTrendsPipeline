@@ -1,6 +1,7 @@
 .env
 config/api_config.yaml
 thinkToDo.txt
+.vscode
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

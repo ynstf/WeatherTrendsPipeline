@@ -1,0 +1,2 @@
+timestamp,temperature,humidity,wind_speed,wind_direction,pressure,precipitation,cloud_cover,dew_point,uv_index,visibility,apparent_temperature,summary,lat,lng
+2024-12-06T22:02:33.636474,61,88,4.72,88,1027,0,0.68,58.28,0,6.58235,61,Partly cloudy skies. A mild day ahead. Higher humidity levels. Expect a gentle breeze. Low UV levels.,33.5731,-7.5898
