@@ -8,25 +8,32 @@ A comprehensive data engineering pipeline for collecting, processing, and analyz
 WeatherTrendsPipeline/
 ├── src/                      # Source code
 │   ├── data/                 # Data handling modules
-│   │   ├── extraction/       # Data extraction scripts (API calls)
-│   │   ├── processing/       # Data transformation scripts
-│   │   └── storage/         # Database interaction scripts
-│   ├── visualization/        # Visualization scripts
-│   └── utils/               # Utility functions
-├── config/                   # Configuration files
-│   ├── db_config.yaml       # Database configuration
-│   └── api_config.yaml      # API configuration
-├── airflow/                  # Airflow DAGs and operators
-│   ├── dags/                # DAG definitions
-│   └── operators/           # Custom operators
-├── tests/                   # Test files
-├── notebooks/               # Jupyter notebooks for analysis
-├── docs/                    # Documentation
-├── data/                    # Data files
-│   ├── raw/                 # Raw data
-│   ├── processed/           # Processed data
-│   └── final/              # Final analysis results
-└── requirements.txt         # Project dependencies
+│   │   ├── extraction/       # Data extraction scripts
+│   │   └── processing/       # Data transformation scripts
+│   ├── utils/               # Utility functions
+│   │   ├── __init__.py
+│   │   ├── api_client.py    # API interaction utilities
+│   │   └── def_transformations.py  # Data transformation functions
+│   └── visualization/       # Data visualization components
+├── data/                    # Data storage
+│   ├── raw/                # Raw weather data
+│   ├── processed/          # Transformed data
+│   └── final/             # Final analysis results
+├── config/                 # Configuration files
+│   ├── db_config.yaml     # Database settings
+│   └── api_config.yaml    # API settings
+├── dags/                  # Automation scripts
+│   └── extraction.sh      # Data extraction shell script
+├── scheduler/             # Scheduling configuration
+│   └── CRON              # Cron job definitions
+├── docs/                 # Documentation
+├── logs/                 # Log files
+│   └── extraction.log  # Single log file for all extractions
+├── notebooks/           # Jupyter notebooks
+├── tests/              # Test files
+├── .env               # Environment variables
+├── requirements.txt  # Python dependencies
+└── setup_venv.bat   # Virtual environment setup
 ```
 
 ## Setup
@@ -104,6 +111,98 @@ fez_weather = client.get_latest_weather(34.0181, -5.0078)
   - UV index
   - Atmospheric pressure
   - Weather conditions summary
+
+## Data Processing Features
+
+### Transformation Pipeline
+- Comprehensive data transformation capabilities:
+  - Temperature unit conversions (°F to °C)
+  - Wind speed conversions (mph to km/h and m/s)
+  - Pressure conversions (mb to hPa and atm)
+  - Visibility distance conversions (miles to km)
+
+### Advanced Weather Metrics
+- Heat Index calculation for temperatures ≥ 80°F
+- Wind Chill calculation for temperatures ≤ 50°F and wind speeds > 3 mph
+- Seasonal categorization based on month
+- Time-based analytics (hour, day, month patterns)
+
+### Automated Scheduling
+- Cron job implementation for automated data collection
+- Shell script automation:
+  ```bash
+  # Extraction shell script (dags/extraction.sh)
+  #!/bin/bash
+  cd /WeatherTrendsPipeline
+  source venv/bin/activate
+  python src/data/extraction/extract_weather.py >> logs/extraction.log 2>&1
+  ```
+- Cron scheduling example:
+  ```bash
+  # Run every 14 minutes (optimized for 100 API calls per day limit)
+  */14 * * * * /WeatherTrendsPipeline/dags/extraction.sh
+  ```
+- Logging system:
+  ```
+  logs/
+  └── extraction.log  # Single log file for all extractions
+  ```
+  Log entries include:
+  ```
+  [2024-12-06 14:00:01] INFO: Starting weather data extraction
+  [2024-12-06 14:00:02] INFO: Successfully retrieved weather data for Casablanca
+  [2024-12-06 14:00:03] INFO: Data saved to /WeatherTrendsPipeline/data/raw/weather_data.csv
+  [2024-12-06 14:14:01] INFO: Starting weather data extraction
+  [2024-12-06 14:14:02] INFO: Successfully retrieved weather data for Casablanca
+  [2024-12-06 14:14:03] INFO: Data saved to /WeatherTrendsPipeline/data/raw/weather_data.csv
+  ...
+  ```
+
+### Data Storage Structure
+- Raw data storage:
+  - CSV format with timestamp-based naming
+  - Automatic daily file management
+- Processed data:
+  - Enriched datasets with calculated metrics
+  - Transformed units for analysis
+  - Temporal features extraction
+
+### Remote Deployment
+- AWS EC2 instance deployment
+- SSH Configuration:
+  ```
+  Host WeatherTrendsPipeline
+      Hostname X.X.X.X
+      User ubuntu
+      IdentityFile "path/to/WeatherPipeline.pem"
+  ```
+
+### Error Handling and Logging
+- Comprehensive error handling for:
+  - API connection issues
+  - Data validation
+  - File operations
+- Detailed logging system
+- Automatic retry mechanisms
+
+## Technical Requirements
+
+### Python Environment
+- Python version: 3.9.7
+- Key dependencies:
+  ```
+  numpy==1.24.3
+  pandas==2.0.3
+  requests
+  python-dotenv
+  loguru
+  ```
+
+### System Requirements
+- Linux/Unix environment for cron jobs
+- Write permissions for data directories
+- Network access for API calls
+- SSH access for remote deployment
 
 ## Contributing
 
