@@ -9,11 +9,16 @@ WeatherTrendsPipeline/
 ├── src/                      # Source code
 │   ├── data/                 # Data handling modules
 │   │   ├── extraction/       # Data extraction scripts
-│   │   └── processing/       # Data transformation scripts
+│   │   │   └── extract_weather.py    # Weather data extraction
+│   │   ├── processing/       # Data transformation scripts
+│   │   │   └── transform_weather.py  # Weather data transformation
+│   │   └── storage/          # Data storage scripts
+│   │       └── load_weather.py       # S3 upload functionality
 │   ├── utils/               # Utility functions
 │   │   ├── __init__.py
 │   │   ├── api_client.py    # API interaction utilities
-│   │   └── def_transformations.py  # Data transformation functions
+│   │   ├── def_transformations.py  # Data transformation functions
+│   │   └── save_data.py    # Data saving and management utilities
 │   └── visualization/       # Data visualization components
 ├── data/                    # Data storage
 │   ├── raw/                # Raw weather data
@@ -23,15 +28,20 @@ WeatherTrendsPipeline/
 │   ├── db_config.yaml     # Database settings
 │   └── api_config.yaml    # API settings
 ├── dags/                  # Automation scripts
-│   └── extraction.sh      # Data extraction shell script
+│   ├── extraction.sh      # Data extraction shell script
+│   └── trans_Load.sh      # Transformation and S3 upload script
 ├── scheduler/             # Scheduling configuration
 │   └── CRON              # Cron job definitions
 ├── docs/                 # Documentation
+│   ├── api_documentation.md    # API endpoints and usage
+│   ├── data_schema.md         # Data structure definitions
+│   └── pipeline_documentation.md  # Pipeline processes and monitoring
 ├── logs/                 # Log files
-│   └── extraction.log  # Single log file for all extractions
+│   └── extraction.log  # Log file for extractions and uploads
 ├── notebooks/           # Jupyter notebooks
 ├── tests/              # Test files
-├── .env               # Environment variables
+├── .env               # Environment variables (including AWS credentials)
+├── .env.template      # Environment variables template
 ├── requirements.txt  # Python dependencies
 └── setup_venv.bat   # Virtual environment setup
 ```
@@ -145,7 +155,7 @@ fez_weather = client.get_latest_weather(34.0181, -5.0078)
 - Logging system:
   ```
   logs/
-  └── extraction.log  # Single log file for all extractions
+  └── extraction.log  # Log file for extractions and uploads
   ```
   Log entries include:
   ```
@@ -166,6 +176,17 @@ fez_weather = client.get_latest_weather(34.0181, -5.0078)
   - Enriched datasets with calculated metrics
   - Transformed units for analysis
   - Temporal features extraction
+- Cloud Storage:
+  - Automated daily uploads to AWS S3 bucket at 12:01
+  - Processed data backup and archival
+  - Automatic cleanup of local files after successful upload
+
+### Automated Scheduling
+- Daily S3 Upload Schedule:
+  ```bash
+  # Upload processed data to S3 bucket daily at 12:01
+  1 12 * * * /WeatherTrendsPipeline/dags/upload_to_s3.sh
+  ```
 
 ### Remote Deployment
 - AWS EC2 instance deployment

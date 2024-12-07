@@ -1,1 +1,5 @@
-*/14 * * * * /bin/bash ~/dags/extraction.sh
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+PYTHONPATH=/home/ubuntu/WeatherTrendsPipeline
+*/14 * * * * cd /home/ubuntu/WeatherTrendsPipeline && /bin/bash /home/ubuntu/WeatherTrendsPipeline/dags/extraction.sh >> /home/ubuntu/WeatherTrendsPipeline/logs/etl.log 2>&1
+1 0 * * * cd /home/ubuntu/WeatherTrendsPipeline && /bin/bash /home/ubuntu/WeatherTrendsPipeline/dags/trans_Load.sh >> /home/ubuntu/WeatherTrendsPipeline/logs/etl.log 2>&1
