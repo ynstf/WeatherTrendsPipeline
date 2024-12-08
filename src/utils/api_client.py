@@ -2,7 +2,7 @@ import os
 import yaml
 import requests
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from retry import retry
 from loguru import logger
 from dotenv import load_dotenv
@@ -28,27 +28,22 @@ class DataValidationError(WeatherAPIError):
     """Raised when received data fails validation."""
     pass
 
-class AmbeeAPIClient:
+class OpenWeatherMapClient:
     def __init__(self, config_path: str = "config/api_config.yaml"):
-        """Initialize the Ambee API client with configuration."""
+        """Initialize the OpenWeatherMap API client with configuration."""
         # Load environment variables
         load_dotenv()
         
         self.config = self._load_config(config_path)
-        self.base_url = self.config["ambee"]["base_url"]
+        self.base_url = self.config["openweathermap"]["base_url"]
         
-        # Get headers with API key from environment
-        self.headers = {
-            "x-api-key": os.getenv("AMBEE_API_KEY"),
-            "Content-type": "application/json"
-        }
+        # Get API key from environment
+        self.api_key = os.getenv("OPENWEATHERMAP_API_KEY")
+        if not self.api_key:
+            raise ValueError("OPENWEATHERMAP_API_KEY environment variable is not set")
         
-        if not self.headers["x-api-key"]:
-            raise ValueError("AMBEE_API_KEY environment variable is not set")
-        
-        # Initialize rate limiting parameters
-        self.rate_limit_remaining = None
-        self.rate_limit_reset = None
+        # Load locations from config
+        self.locations = self.config["locations"]
         
     def _load_config(self, config_path: str) -> Dict[str, Any]:
         """Load configuration from YAML file."""
@@ -68,22 +63,13 @@ class AmbeeAPIClient:
 
     def _validate_response_data(self, data: Dict[str, Any]) -> None:
         """Validate response data structure."""
-        required_fields = ["message", "data"]
+        required_fields = ["coord", "weather", "main", "wind", "clouds", "sys"]
         if not all(field in data for field in required_fields):
             raise DataValidationError("Response data missing required fields")
 
-    def _update_rate_limits(self, response: requests.Response) -> None:
-        """Update rate limit information from response headers."""
-        self.rate_limit_remaining = response.headers.get('X-RateLimit-Remaining')
-        self.rate_limit_reset = response.headers.get('X-RateLimit-Reset')
-
-    def _handle_rate_limit(self) -> None:
-        """Handle rate limiting by waiting if necessary."""
-        if self.rate_limit_remaining == "0" and self.rate_limit_reset:
-            wait_time = int(self.rate_limit_reset) - int(time.time())
-            if wait_time > 0:
-                logger.warning(f"Rate limit reached. Waiting {wait_time} seconds.")
-                time.sleep(wait_time + 1)  # Add 1 second buffer
+    def get_locations(self) -> List[Dict[str, Any]]:
+        """Get list of configured locations."""
+        return self.locations
 
     @retry(exceptions=(APIConnectionError, Timeout), tries=3, delay=5, backoff=2, logger=logger)
     def get_latest_weather(self, lat: float, lng: float) -> Dict[str, Any]:
@@ -95,49 +81,52 @@ class AmbeeAPIClient:
             lng (float): Longitude
             
         Returns:
-            Dict[str, Any]: Weather data response
+            Dict[str, Any]: Complete weather data response
             
         Raises:
-            APIRateLimitError: When API rate limit is exceeded
             APIConnectionError: When connection to API fails
             APIResponseError: When API returns an error response
             DataValidationError: When data validation fails
         """
         self._validate_coordinates(lat, lng)
-        self._handle_rate_limit()
         
-        endpoint = self.config["ambee"]["endpoints"]["latest_weather"]
+        endpoint = self.config["openweathermap"]["endpoints"]["current_weather"]
         url = f"{self.base_url}{endpoint}"
         
         params = {
             "lat": lat,
-            "lng": lng
+            "lon": lng,
+            "appid": self.api_key
         }
         
         try:
             response = requests.get(
                 url,
-                headers=self.headers,
                 params=params,
                 timeout=self.config["request"]["timeout"]
             )
             
-            # Update rate limit info
-            self._update_rate_limits(response)
-            
             # Handle different HTTP status codes
-            if response.status_code == 429:
-                raise APIRateLimitError("API rate limit exceeded")
-            elif response.status_code == 401:
+            if response.status_code == 401:
                 raise APIResponseError("Invalid API key")
             elif response.status_code == 404:
                 raise APIResponseError("Resource not found")
+            elif response.status_code == 429:
+                raise APIRateLimitError("API rate limit exceeded")
             
             response.raise_for_status()
             
             data = response.json()
             self._validate_response_data(data)
-            return data
+            
+            # Add timestamp and success message
+            result = {
+                "message": "success",
+                "timestamp": time.time(),
+                "data": data
+            }
+            
+            return result
             
         except Timeout:
             logger.error("Request timed out")
@@ -157,13 +146,16 @@ class AmbeeAPIClient:
 
 if __name__ == "__main__":
     # Example usage
-    client = AmbeeAPIClient()
+    client = OpenWeatherMapClient()
     try:
-        # Get weather for Casablanca
-        weather_data = client.get_latest_weather(33.5731, -7.5898)
-        logger.info("Successfully retrieved weather data")
-        logger.debug(f"Weather data: {weather_data}")
+        # Get all configured locations
+        locations = client.get_locations()
+        
+        # Get weather for each location
+        for location in locations:
+            weather = client.get_latest_weather(location["lat"], location["lon"])
+            print(f"\nWeather for {location['name']}:")
+            print(weather)
+            
     except WeatherAPIError as e:
         logger.error(f"Weather API error: {str(e)}")
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")

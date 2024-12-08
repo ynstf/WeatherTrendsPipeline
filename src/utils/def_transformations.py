@@ -2,11 +2,43 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from pathlib import Path
+import os
+import sys
 from typing import Union, Optional
 
 def load_weather_data(file_path: Union[str, Path]) -> pd.DataFrame:
     """Load weather data from CSV file"""
     return pd.read_csv(file_path)
+
+def kelvin_to_celsius(temp_in_kelvin):
+    """Convert temperature from Kelvin to Celsius."""
+    if temp_in_kelvin is None:
+        return None
+    return temp_in_kelvin - 273.15
+
+def kelvin_to_fahrenheit(temp_in_kelvin):
+    """Convert temperature from Kelvin to Fahrenheit."""
+    if temp_in_kelvin is None:
+        return None
+    return (temp_in_kelvin - 273.15) * (9/5) + 32
+
+def meters_per_second_to_kilometers_per_hour(speed):
+    """Convert wind speed from m/s to km/h."""
+    if speed is None:
+        return None
+    return speed * 3.6
+
+def hectopascal_to_inches_mercury(pressure):
+    """Convert pressure from hPa to inHg."""
+    if pressure is None:
+        return None
+    return pressure * 0.02953
+
+def meters_to_kilometers(distance):
+    """Convert visibility from meters to kilometers."""
+    if distance is None:
+        return None
+    return distance / 1000
 
 def fahrenheit_to_celsius(df: pd.DataFrame, columns: list) -> pd.DataFrame:
     """Convert temperature from Fahrenheit to Celsius"""
@@ -116,18 +148,46 @@ def calculate_wind_chill(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def process_weather_data(input_file: Union[str, Path], output_file: Optional[Union[str, Path]] = None) -> pd.DataFrame:
-    """Process weather data with all available transformations"""
-    df = load_weather_data(input_file)
-    
-    df = fahrenheit_to_celsius(df, ['temperature', 'apparent_temperature', 'dew_point'])
-    df = convert_wind_speed(df, from_unit='mph', to_unit='kmh')
-    df = convert_pressure(df, from_unit='mb', to_unit='hpa')
-    df = convert_visibility(df, from_unit='miles', to_unit='km')
-    df = process_timestamps(df)
-    df = calculate_heat_index(df)
-    df = calculate_wind_chill(df)
-    
-    if output_file:
-        df.to_csv(output_file, index=False)
+    """
+    Process weather data from input CSV file and optionally save to output file.
+    Converts units and adds calculated fields.
+    """
+    try:
+        # Read the input CSV file
+        df = load_weather_data(input_file)
         
-    return df
+        # Convert temperature from Kelvin to Celsius
+        temp_columns = ['temp', 'feels_like', 'temp_min', 'temp_max']
+        for col in temp_columns:
+            if col in df.columns:
+                df[f'{col}_celsius'] = df[col].apply(kelvin_to_celsius).round(2)
+                df[f'{col}_fahrenheit'] = df[col].apply(kelvin_to_fahrenheit).round(2)
+        
+        # Convert wind speed to km/h
+        if 'wind_speed' in df.columns:
+            df['wind_speed_kmh'] = df['wind_speed'].apply(meters_per_second_to_kilometers_per_hour).round(2)
+        
+        # Convert pressure to inHg
+        pressure_columns = ['pressure', 'sea_level', 'ground_level']
+        for col in pressure_columns:
+            if col in df.columns:
+                df[f'{col}_inHg'] = df[col].apply(hectopascal_to_inches_mercury).round(2)
+        
+        # Convert visibility to kilometers
+        if 'visibility' in df.columns:
+            df['visibility_km'] = df['visibility'].apply(meters_to_kilometers).round(2)
+        
+        # Calculate additional metrics or add any derived fields here
+        
+        # Save processed data if output file is specified
+        if output_file:
+            output_dir = os.path.dirname(output_file)
+            if output_dir:
+                os.makedirs(output_dir, exist_ok=True)
+            df.to_csv(output_file, index=False)
+        
+        return df
+        
+    except Exception as e:
+        print(f"Error processing weather data: {str(e)}")
+        raise

@@ -11,7 +11,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 try:
-    from src.utils.api_client import AmbeeAPIClient
+    from src.utils.api_client import OpenWeatherMapClient
 except ImportError as e:
     print(f"Error importing utils: {e}")
     print(f"sys.path: {sys.path}")
@@ -21,57 +21,74 @@ from loguru import logger
 
 def extract_and_save_weather():
     """
-    Extract weather data using the Ambee API and save it to the raw data folder as CSV
+    Extract weather data using the OpenWeatherMap API and save it to the raw data folder as CSV
     """
     # Initialize API client
-    client = AmbeeAPIClient()
+    client = OpenWeatherMapClient()
     
     # Create data directory if it doesn't exist
     raw_data_dir = project_root / "data" / "raw"
     raw_data_dir.mkdir(parents=True, exist_ok=True)
     
-    # Define output file path with timestamp
-    #timestamp = datetime.now().strftime("%Y%m%d")
-    output_file = raw_data_dir / f"weather_data.csv"
+    # Define output file path
+    output_file = raw_data_dir / "weather_data.csv"
     
     try:
+        # Get locations from config and find Casablanca
+        locations = client.get_locations()
+        casablanca = next(loc for loc in locations if loc["name"] == "Casablanca")
+        
         # Get weather for Casablanca
-        response = client.get_latest_weather(33.5731, -7.5898)
+        response = client.get_latest_weather(casablanca["lat"], casablanca["lon"])
         logger.debug(f"Raw weather data: {response}")
         
         if response.get('message') != 'success' or 'data' not in response:
             raise ValueError("Invalid API response format")
             
         weather_data = response['data']
-        current_time = datetime.now().isoformat()
         
         # Flatten the nested JSON data for CSV format
         flattened_data = {
-            'timestamp': current_time,
-            'temperature': weather_data.get('temperature', None),
-            'humidity': weather_data.get('humidity', None),
-            'wind_speed': weather_data.get('windSpeed', None),
-            'wind_direction': weather_data.get('windBearing', None),
-            'pressure': weather_data.get('pressure', None),
-            'precipitation': weather_data.get('precipIntensity', None),
-            'cloud_cover': weather_data.get('cloudCover', None),
-            'dew_point': weather_data.get('dewPoint', None),
-            'uv_index': weather_data.get('uvIndex', None),
-            'visibility': weather_data.get('visibility', None),
-            'apparent_temperature': weather_data.get('apparentTemperature', None),
-            'summary': weather_data.get('summary', None),
-            'lat': weather_data.get('lat', 33.5731),
-            'lng': weather_data.get('lng', -7.5898)
+            'timestamp': datetime.fromtimestamp(weather_data['dt']).isoformat(),
+            'location_name': weather_data['name'],
+            'latitude': weather_data['coord']['lat'],
+            'longitude': weather_data['coord']['lon'],
+            # Main weather data
+            'weather_main': weather_data['weather'][0]['main'],
+            'weather_description': weather_data['weather'][0]['description'],
+            'weather_icon': weather_data['weather'][0]['icon'],
+            # Temperature data
+            'temp': weather_data['main']['temp'],
+            'feels_like': weather_data['main']['feels_like'],
+            'temp_min': weather_data['main']['temp_min'],
+            'temp_max': weather_data['main']['temp_max'],
+            # Pressure and humidity
+            'pressure': weather_data['main']['pressure'],
+            'humidity': weather_data['main']['humidity'],
+            'sea_level': weather_data['main'].get('sea_level'),
+            'ground_level': weather_data['main'].get('grnd_level'),
+            # Wind data
+            'wind_speed': weather_data['wind']['speed'],
+            'wind_direction': weather_data['wind'].get('deg'),
+            # Clouds and visibility
+            'cloud_cover': weather_data['clouds']['all'],
+            'visibility': weather_data.get('visibility'),
+            # System data
+            'country': weather_data['sys']['country'],
+            'sunrise': datetime.fromtimestamp(weather_data['sys']['sunrise']).isoformat(),
+            'sunset': datetime.fromtimestamp(weather_data['sys']['sunset']).isoformat(),
+            'timezone': weather_data['timezone']
         }
         
         # Check if file exists to write headers
         file_exists = output_file.exists()
         
-        # Write to CSV file in append mode
-        with open(output_file, 'a', newline='', encoding='utf-8') as f:
+        # Write to CSV file
+        mode = 'a' if file_exists else 'w'
+        with open(output_file, mode, newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=flattened_data.keys())
             
-            # Write headers only if file is new
+            # Write headers if file is new or empty
             if not file_exists:
                 writer.writeheader()
             

@@ -9,6 +9,11 @@ ambee:
     x-api-key: "${AMBEE_API_KEY}"  # Will be loaded from environment variable
     Content-type: "application/json"
 
+# OpenWeatherMap API settings
+openweathermap:
+  base_url: "https://api.openweathermap.org/data/2.5"
+  endpoints:
+    current_weather: "/weather"
 # API request settings
 request:
   timeout: 30  # seconds

@@ -1,2 +1,3 @@
-timestamp,temperature,humidity,wind_speed,wind_direction,pressure,precipitation,cloud_cover,dew_point,uv_index,visibility,apparent_temperature,summary,lat,lng
-2024-12-06T22:02:33.636474,61,88,4.72,88,1027,0,0.68,58.28,0,6.58235,61,Partly cloudy skies. A mild day ahead. Higher humidity levels. Expect a gentle breeze. Low UV levels.,33.5731,-7.5898
+timestamp,location_name,latitude,longitude,weather_main,weather_description,weather_icon,temp,feels_like,temp_min,temp_max,pressure,humidity,sea_level,ground_level,wind_speed,wind_direction,cloud_cover,visibility,country,sunrise,sunset,timezone
+2024-12-08T15:02:55,Le Polo,33.5731,-7.5898,Clouds,scattered clouds,03d,293.15,292.88,293.14,295.08,1023,64,1023,1011,3.09,80,40,6000,MA,2024-12-08T08:22:45,2024-12-08T18:22:22,3600
+2024-12-08T15:02:55,Le Polo,33.5731,-7.5898,Clouds,scattered clouds,03d,293.15,292.88,293.14,295.08,1023,64,1023,1011,3.09,80,40,6000,MA,2024-12-08T08:22:45,2024-12-08T18:22:22,3600

@@ -1,6 +1,6 @@
 # WeatherTrendsPipeline
 
-A comprehensive data engineering pipeline for collecting, processing, and analyzing weather data using the Ambee Weather API.
+A comprehensive data engineering pipeline for collecting, processing, and analyzing weather data using the OpenWeatherMap API.
 
 ## Project Structure
 
@@ -58,9 +58,9 @@ WeatherTrendsPipeline/
    ```bash
    pip install -r requirements.txt
    ```
-4. Copy `.env.template` to `.env` and add your Ambee API key:
+4. Copy `.env.template` to `.env` and add your OpenWeatherMap API key:
    ```
-   AMBEE_API_KEY=your_api_key_here
+   OPENWEATHERMAP_API_KEY=your_api_key_here
    ```
 5. Copy `config/api_config.template.yaml` to `config/api_config.yaml`
 
@@ -69,10 +69,10 @@ WeatherTrendsPipeline/
 ### Getting Current Weather Data
 
 ```python
-from src.utils.api_client import AmbeeAPIClient
+from src.utils.api_client import OpenWeatherMapAPIClient
 
 # Initialize the client
-client = AmbeeAPIClient()
+client = OpenWeatherMapAPIClient()
 
 # Get weather for Casablanca
 casablanca_weather = client.get_latest_weather(33.5731, -7.5898)
